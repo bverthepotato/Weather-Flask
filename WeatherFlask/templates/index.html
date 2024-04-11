@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WeatherPy</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/styles/weather.css">
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+    <div id="loading-screen" class="loading-screen">
+        <div class="spinner-border text-primary" role="status">
+        </div>
+    </div>
+
+    <div class="container mt-5">
+        <div id="searchContainer" class="card">
+            <h1 class="text-center mb-4">WeatherPy</h1>
+            <form method="post" action="/" id="weatherForm">
+                <div class="form-group">
+                    <label for="location">Input Location:</label>
+                    <input type="text" id="location" name="location" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Search</button>
+            </form>
+
+            <div id="weatherInfo" class="weather-info"></div>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            hideLoadingScreen();
+            $('#weatherForm').submit(function (event) {
+                event.preventDefault();
+                showLoadingScreen();
+    
+                var formData = {
+                    'location': $('#location').val()
+                };
+    
+                $.ajax({
+                    type: 'POST',
+                    url: '/',
+                    data: formData,
+                    dataType: 'json',
+                    encode: true
+                })
+                .done(function(data) {
+                    if (data.error_message) {
+                        showError(data.error_message);
+                    } else {
+                        updateWeatherInfo(data);
+                    }
+                })
+                .fail(function(data) {
+                    showError('Location not found');
+                })
+                .always(function() {
+                    hideLoadingScreen();
+                });
+            });
+    
+            function showLoadingScreen() {
+                $('#loading-screen').show();
+            }
+    
+            function hideLoadingScreen() {
+                $('#loading-screen').hide();
+            }
+    
+            function showError(message) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Invalid',
+                    text: message,
+                    confirmButtonColor: '#3085d6',
+                    confirmButtonText: 'OK'
+                });
+            }
+    
+            function updateWeatherInfo(data) {
+                var weatherInfo = $('#weatherInfo');
+                weatherInfo.html(
+                    '<p>Temperature: ' + data.temperature + '°C</p>' +
+                    '<p>Wind Speed: ' + data.wind_speed + ' m/s</p>' +
+                    '<p>Location: ' + data.city + ', ' + data.country + '</p>'
+                );
+            }
+        });
+    </script>
+    
+</body>
+</html>
